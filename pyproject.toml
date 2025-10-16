@@ -1,0 +1,18 @@
+[project]
+name = "Smart_desk_back"
+version = "0.1.0"
+description = "Back for Smart Desk Project"
+readme = "README.md"
+authors = [
+    { name = "Antoine Hanachowiz", email = "antoine.hanachowicz@outlook.com" },
+    {name = "Julie ALLIER"},
+    {name = "Antonin "}
+]
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi",
+    "httpx",
+    "uvicorn",
+    "requests"
+   ]
