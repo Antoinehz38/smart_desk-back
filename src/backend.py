@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from tools.confort import well_being_score
 
 API_BASE = "https://api.thingspeak.com"
-
+ID_ROOM = 3120427
 
 app = FastAPI(title="ThingSpeak proxy API for channel 3120427")
 
@@ -26,9 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/data_all")
-def get_data_all():
-    url = "https://api.thingspeak.com/channels/3120427/feeds.json"
+@app.get("/data/all")
+async def get_data_all():
+    global ID_ROOM
+    url = f"https://api.thingspeak.com/channels/{ID_ROOM}/feeds.json"
     params = {"results": 5}
     response = requests.get(url, params)
     Temperature = [response.json()["feeds"][i]["field1"] for i in range(len(response.json()["feeds"]))]
@@ -37,23 +38,28 @@ def get_data_all():
     Time = [response.json()["feeds"][i]["created_at"] for i in range(len(response.json()["feeds"]))]
 
 
-    return {"ok": True, "Temp":Temperature, "Press": Pressure, "Hum":Hum, "Time":Time}
+    return {"ok": True, "temperature":Temperature, "pressure": Pressure, "humidity":Hum, "time":Time}
 
-@app.get("/well-being-score")
-def get_well_being_score():
+@app.get("/data/well-being-score")
+async def get_well_being_score():
     url = "https://api.thingspeak.com/channels/3120427/feeds.json"
     params = {"results": 1}
     response = requests.get(url, params)
 
-    Temperature = response.json()["feeds"][0]["field1"]
-    pressure = response.json()["feeds"][0]["field2"]
-    hum = response.json()['feeds'][0]['field3']
+    Temperature = float(response.json()["feeds"][0]["field1"])
+    pressure = float(response.json()["feeds"][0]["field2"])
+    hum = float(response.json()['feeds'][0]['field3'])
 
     score = well_being_score(temp_c= Temperature,press_hpa=pressure, hum=hum)
 
-    return {"ok": True, "well_being_score": score * 100}
+    return {"ok": True, "well_being_score": score }
 
 
+@app.put("/room/change")
+async def put_new_room_number(data):
+    global ID_ROOM
+    ID_ROOM = data.get("ID_ROOM", ID_ROOM)
+    return {"ok": True}
 
 
 
