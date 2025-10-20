@@ -1,13 +1,12 @@
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import requests
-import httpx
-import asyncio
-from typing import Optional
-from datetime import datetime, timedelta
 
 
+
+from tools.format_tools import RoomChange
 from tools.confort import well_being_score
+from tools.room_params import ROOM_PARAMS
 
 API_BASE = "https://api.thingspeak.com"
 ID_ROOM = 3120427
@@ -42,7 +41,8 @@ async def get_data_all():
 
 @app.get("/data/well-being-score")
 async def get_well_being_score():
-    url = "https://api.thingspeak.com/channels/3120427/feeds.json"
+    global ID_ROOM
+    url = f"https://api.thingspeak.com/channels/{ID_ROOM}/feeds.json"
     params = {"results": 1}
     response = requests.get(url, params)
 
@@ -56,10 +56,14 @@ async def get_well_being_score():
 
 
 @app.put("/room/change")
-async def put_new_room_number(data):
+async def put_new_room_number(payload: RoomChange):
     global ID_ROOM
-    ID_ROOM = data.get("ID_ROOM", ID_ROOM)
-    return {"ok": True}
+    new_room_number = payload.room_number
+    if new_room_number in list(ROOM_PARAMS.keys()):
+        ID_ROOM = ROOM_PARAMS[new_room_number]
+        return {"ok": True, 'message': f'Salle actuelle : {new_room_number} '}
+    else:
+        return {"ok": False, 'message': f'Numéro de salle non valide'}
 
 
 
